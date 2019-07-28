@@ -1,0 +1,435 @@
+openapi: 3.0.1
+info:
+  title: Lamoda Logistic
+  description: Lamoda products logistic API
+  contact:
+    name: Sergey Kamenskiy
+    email: skvirp@gmail.com
+    url: https://github.com/virp
+  version: 1.0.0
+servers:
+- url: http://lamoda.test/api
+  description: Development Server
+- url: http://127.0.0.1:8000/api
+  description: Artisan Serve
+tags:
+  - name: products
+  - name: containers
+  - name: logistics
+
+paths:
+  /products:
+    get:
+      tags:
+        - products
+      description: Get Products list
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        200:
+          description: Paginated products list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                  - $ref: '#/components/schemas/PaginatedResponse'
+
+    post:
+      tags:
+        - products
+      description: Create new Product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductData'
+      responses:
+        201:
+          description: New Product was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        422:
+          description: Fields validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductValidationError'
+
+  /products/{id}:
+    get:
+      tags:
+        - products
+      description: Get product by ID
+      parameters: 
+        - $ref: '#/components/parameters/ProductID'
+      responses:
+        200:
+          description: Product
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        404:
+          description: Product with given ID not found
+
+    put:
+      tags:
+        - products
+      description: Update Product
+      parameters: 
+        - $ref: '#/components/parameters/ProductID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductData'
+      responses:
+        200:
+          description: Product was updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        404:
+          description: Product with given ID not found
+        422:
+          description: Fields validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductValidationError'
+
+    delete:
+      tags:
+        - products
+      description: Delete Product
+      parameters: 
+        - $ref: '#/components/parameters/ProductID'
+      responses:
+        200:
+          description: Product was deleted
+        404:
+          description: Product with given ID not found
+
+  /containers:
+    get:
+      tags:
+        - containers
+      description: Get Containers list
+      parameters: 
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        200:
+          description: Paginated containers list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Container'
+                  - $ref: '#/components/schemas/PaginatedResponse'
+
+    post:
+      tags:
+        - containers
+      description: Create new Container
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ContainerData'
+                - $ref: '#/components/schemas/ProductsIDs'
+      responses:
+        201:
+          description: New Container was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContainerWithProducts'
+        422:
+          description: Feilds validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerValidationError'
+
+  /containers/{id}:
+    get:
+      tags:
+        - containers
+      description: Get container by ID
+      parameters:
+        - $ref: '#/components/parameters/ContainerID'
+      responses:
+        200:
+          description: Container
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Container'
+        404:
+          description: Container with given ID not found
+
+    put:
+      tags:
+        - containers
+      description: Update Container
+      parameters:
+        - $ref: '#/components/parameters/ContainerID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ContainerData'
+                - $ref: '#/components/schemas/ProductsIDs'
+      responses:
+        200:
+          description: Container was updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContainerWithProducts'
+        404:
+          description: Container with given ID not found
+        422:
+          description: Fields validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerValidationError'
+
+    delete:
+      tags:
+        - containers
+      description: Delete Container
+      parameters: 
+        - $ref: '#/components/parameters/ContainerID'
+      responses:
+        200:
+          description: Container was deleted
+        404:
+          description: Container with given ID not found
+
+  /containers/logistic:
+    get:
+      tags:
+        - logistics
+      description: Get all Containers that contains all Products
+      responses:
+        200:
+          description: Containers list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Container'
+
+components:
+  schemas:
+    PaginatedResponse:
+      properties:
+        links:
+          type: object
+          properties:
+            first:
+              type: string
+              description: First page link
+            last:
+              type: string
+              description: Last page link
+            prev:
+              type: string
+              description: Previous page link
+              nullable: true
+            next:
+              type: string
+              description: Next page link
+              nullable: true
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+              description: Current page number
+            from:
+              type: integer
+              description: Items from number on this page
+            last_page:
+              type: integer
+              description: Last page number
+            path:
+              type: string
+              description: Base path
+            per_page:
+              type: integer
+              description: Items per page number
+            to:
+              type: integer
+              description: Items to number on this page
+            total:
+              type: integer
+              description: Total items count
+
+    ProductData:
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Product Title
+
+    Product:
+      allOf:
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              description: Product primary key
+        - $ref: '#/components/schemas/ProductData'
+        
+    ProductsIDs:
+      properties:
+        products:
+          nullable: true
+          type: array
+          description: Products IDs for create/update action
+          items:
+            type: integer
+          example: [1, 2, 3, 4]
+
+    ContainerData:
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Container Title
+          
+    Container:
+      allOf:
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              description: Container primary key
+        - $ref: '#/components/schemas/ContainerData'
+        
+    ContainerWithProducts:
+      allOf:
+        - $ref: '#/components/schemas/Container'
+        - type: object
+          properties:
+            products:
+              type: array
+              items:
+                $ref: '#/components/schemas/Product'
+
+    ValidationError:
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: The given data was invalid.  
+
+    ProductValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ValidationError'
+        - type: object
+          properties:
+            errors:
+              type: object
+              description: Fields with validation error messages
+              example:
+                title: [The title field is required]
+
+    ContainerValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ValidationError'
+        - type: object
+          properties:
+            errors:
+              type: object
+              description: Fields with validation error messages
+              example:
+                title: [The title field is required.]
+                products: [The products may not have more than 2 items.]
+                products.0: [The selected products.0 is invalid.]
+
+  parameters:
+    Page:
+      name: page
+      description: Page number
+      in: query
+      schema:
+        type: integer
+      example: 1
+
+    PerPage:
+      name: per_page
+      description: Items per page
+      in: query
+      schema:
+        type: integer
+      example: 10
+
+    ProductID:
+      name: id
+      description: Product ID
+      required: true
+      in: path
+      schema:
+        type: integer
+
+    ContainerID:
+      name: id
+      description: Container ID
+      required: true
+      in: path
+      schema:
+        type: integer
